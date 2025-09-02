@@ -2,6 +2,7 @@ package org.GG.apcProject.model;
 
 import java.util.Set;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -9,6 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
 @Entity
@@ -25,13 +27,28 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "full_name")
     private String fullName;
+
     private String email;
 
     @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "role")
     private Set<String> roles;
 
-    // ---------------- Getters and Setters ----------------
+    // Constructors
+    public User() {}
+
+    public User(String username, String password, String fullName, String email, Set<String> roles) {
+        this.username = username;
+        this.password = password;
+        this.fullName = fullName;
+        this.email = email;
+        this.roles = roles;
+    }
+
+    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

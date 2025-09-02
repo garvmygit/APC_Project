@@ -1,9 +1,7 @@
 package org.GG.apcProject.config;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 import org.GG.apcProject.service.UserDetailsServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +10,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -38,18 +39,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
 
             try {
-                String username = jwtUtil.validateAndGetUsername(token);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                // Validate token
+                if (jwtUtil.validateToken(token)) {
+                    // Extract username
+                    String username = jwtUtil.getUsernameFromToken(token);
 
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    // Load user details
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                    // Create authentication token
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+
+                    // Set authentication in context
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
 
             } catch (Exception e) {
-                logger.warn("JWT token validation failed: {}", e.getMessage());
+                logger.warn("JWT token validation failed", e); // logs full exception
             }
         }
 
+        // Continue filter chain
         chain.doFilter(request, response);
     }
 }
